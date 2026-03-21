@@ -12,7 +12,10 @@ import com.eventhub.repository.CategoryRepository;
 import com.eventhub.repository.EventRepository;
 import com.eventhub.service.EventService;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -39,6 +42,7 @@ public class EventServiceImpl implements EventService {
         event.setDescription(dto.getDescription());
         event.setTicketPrice(dto.getTicketPrice());
         event.setEventDate(dto.getEventDate());
+        event.setActive(dto.getActive() != null ? dto.getActive() : true);
         event.setCategory(category);
 
         Event saved = eventRepository.save(event);
@@ -54,10 +58,19 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Cacheable(value = "eventsList", key = "#page + '-' + #size + '-' + #sort + '-' + #category + '-' + #minPrice + '-' + #maxPrice + '-' + #startDate + '-' + #endDate")
-    public PagedResponse<EventDTO> getAllEvents(int page, int size, String sort, String category,
-                                                Double minPrice, Double maxPrice, String startDate, String endDate) {
-
+    @Cacheable(value = "eventsList", key = "#page + '-' + #size + '-' + #sort + '-' + #category + '-' + #minPrice + '-' + #maxPrice + '-' + #startDate + '-' + #endDate + '-' + #active + '-' + #keyword")
+    public PagedResponse<EventDTO> getAllEvents(
+            int page,
+            int size,
+            String sort,
+            String category,
+            Double minPrice,
+            Double maxPrice,
+            String startDate,
+            String endDate,
+            Boolean active,
+            String keyword
+    ) {
         String[] sortParts = sort.split(",");
         String sortField = sortParts[0];
         String direction = sortParts.length > 1 ? sortParts[1] : "asc";
@@ -75,9 +88,14 @@ public class EventServiceImpl implements EventService {
 
         Page<Event> eventPage;
 
-        if (category != null && !category.isBlank()) {
+        if (keyword != null && !keyword.isBlank()) {
+            eventPage = eventRepository.searchEvents(keyword, blankToNull(category), pageable);
+        } else if (category != null && !category.isBlank()) {
             eventPage = eventRepository.findByCategory_NameIgnoreCaseAndTicketPriceBetweenAndEventDateBetween(
-                    category, min, max, start, end, pageable);
+                    category, min, max, start, end, pageable
+            );
+        } else if (Boolean.TRUE.equals(active)) {
+            eventPage = eventRepository.findByActiveTrue(pageable);
         } else if (minPrice != null || maxPrice != null) {
             eventPage = eventRepository.findByTicketPriceBetween(min, max, pageable);
         } else if (startDate != null || endDate != null) {
@@ -96,6 +114,22 @@ public class EventServiceImpl implements EventService {
         );
     }
 
+    @Override
+    public Long countRegistrationsForEvent(Long eventId) {
+        if (!eventRepository.existsById(eventId)) {
+            throw new EventNotFoundException("Event not found with id " + eventId);
+        }
+        return eventRepository.countRegistrationsForEvent(eventId);
+    }
+
+    @Override
+    public BigDecimal totalRevenueForEvent(Long eventId) {
+        if (!eventRepository.existsById(eventId)) {
+            throw new EventNotFoundException("Event not found with id " + eventId);
+        }
+        return eventRepository.totalRevenueForEvent(eventId);
+    }
+
     private EventDTO toDTO(Event event) {
         CategoryDTO categoryDTO = new CategoryDTO(
                 event.getCategory().getId(),
@@ -108,8 +142,13 @@ public class EventServiceImpl implements EventService {
                 event.getDescription(),
                 event.getTicketPrice(),
                 event.getEventDate(),
+                event.getActive(),
                 event.getCreatedAt(),
                 categoryDTO
         );
+    }
+
+    private String blankToNull(String value) {
+        return (value == null || value.isBlank()) ? null : value;
     }
 }

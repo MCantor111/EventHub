@@ -1,6 +1,10 @@
 package com.eventhub.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -19,6 +23,8 @@ public class CreateEventDTO {
 
     @NotNull(message = "Event date is required")
     private LocalDate eventDate;
+
+    private Boolean active;
 
     @NotNull(message = "Category is required")
     private Long categoryId;
@@ -42,6 +48,10 @@ public class CreateEventDTO {
         return eventDate;
     }
 
+    public Boolean getActive() {
+        return active;
+    }
+
     public Long getCategoryId() {
         return categoryId;
     }
@@ -60,6 +70,10 @@ public class CreateEventDTO {
 
     public void setEventDate(LocalDate eventDate) {
         this.eventDate = eventDate;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 
     public void setCategoryId(Long categoryId) {

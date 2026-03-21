@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "events")
@@ -26,19 +28,30 @@ public class Event {
     @Column(nullable = false)
     private LocalDate eventDate;
 
+    @Column(nullable = false)
+    private Boolean active;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = false)
+    private List<RegistrationItem> registrationItems = new ArrayList<>();
 
     public Event() {
     }
 
     @PrePersist
     public void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        if (this.active == null) {
+            this.active = true;
+        }
     }
 
     public Long getId() {
@@ -61,12 +74,20 @@ public class Event {
         return eventDate;
     }
 
+    public Boolean getActive() {
+        return active;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public Category getCategory() {
         return category;
+    }
+
+    public List<RegistrationItem> getRegistrationItems() {
+        return registrationItems;
     }
 
     public void setId(Long id) {
@@ -89,11 +110,19 @@ public class Event {
         this.eventDate = eventDate;
     }
 
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public void setRegistrationItems(List<RegistrationItem> registrationItems) {
+        this.registrationItems = registrationItems;
     }
 }

@@ -11,6 +11,7 @@ public class EventDTO {
     private String description;
     private BigDecimal ticketPrice;
     private LocalDate eventDate;
+    private Boolean active;
     private LocalDateTime createdAt;
     private CategoryDTO category;
 
@@ -18,12 +19,13 @@ public class EventDTO {
     }
 
     public EventDTO(Long id, String title, String description, BigDecimal ticketPrice,
-                    LocalDate eventDate, LocalDateTime createdAt, CategoryDTO category) {
+                    LocalDate eventDate, Boolean active, LocalDateTime createdAt, CategoryDTO category) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.ticketPrice = ticketPrice;
         this.eventDate = eventDate;
+        this.active = active;
         this.createdAt = createdAt;
         this.category = category;
     }
@@ -46,6 +48,10 @@ public class EventDTO {
 
     public LocalDate getEventDate() {
         return eventDate;
+    }
+
+    public Boolean getActive() {
+        return active;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -74,6 +80,10 @@ public class EventDTO {
 
     public void setEventDate(LocalDate eventDate) {
         this.eventDate = eventDate;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
