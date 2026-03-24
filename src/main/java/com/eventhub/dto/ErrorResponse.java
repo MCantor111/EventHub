@@ -5,8 +5,9 @@ import java.util.Map;
 
 public class ErrorResponse {
 
-    private String message;
     private int status;
+    private String error;
+    private String message;
     private LocalDateTime timestamp;
     private Map<String, String> errors;
 
@@ -14,9 +15,17 @@ public class ErrorResponse {
         this.timestamp = LocalDateTime.now();
     }
 
+    public ErrorResponse(int status, String error, String message, LocalDateTime timestamp) {
+        this.status = status;
+        this.error = error;
+        this.message = message;
+        this.timestamp = timestamp;
+    }
+
     public ErrorResponse(String message, int status) {
         this.message = message;
         this.status = status;
+        this.error = null;
         this.timestamp = LocalDateTime.now();
     }
 
@@ -24,15 +33,20 @@ public class ErrorResponse {
         this.message = message;
         this.status = status;
         this.errors = errors;
+        this.error = null;
         this.timestamp = LocalDateTime.now();
-    }
-
-    public String getMessage() {
-        return message;
     }
 
     public int getStatus() {
         return status;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     public LocalDateTime getTimestamp() {
@@ -43,12 +57,16 @@ public class ErrorResponse {
         return errors;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
     public void setStatus(int status) {
         this.status = status;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public void setTimestamp(LocalDateTime timestamp) {

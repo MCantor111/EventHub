@@ -3,13 +3,14 @@ package com.eventhub.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
 public class CreateRegistrationDTO {
 
-    @NotNull(message = "User id is required")
+    // Optional now:
+    // - regular USERs can omit it and the authenticated user is used
+    // - ADMINs may provide it to create a registration for a specific user
     private Long userId;
 
     @NotBlank(message = "Status is required")

@@ -29,6 +29,19 @@ public class EventController {
         return eventService.createEvent(dto);
     }
 
+    @Operation(summary = "Update an event")
+    @PutMapping("/{id}")
+    public EventDTO updateEvent(@PathVariable Long id, @Valid @RequestBody CreateEventDTO dto) {
+        return eventService.updateEvent(id, dto);
+    }
+
+    @Operation(summary = "Delete an event")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{id}")
+    public void deleteEvent(@PathVariable Long id) {
+        eventService.deleteEvent(id);
+    }
+
     @Operation(summary = "Get event by id")
     @GetMapping("/{id}")
     public EventDTO getEventById(@PathVariable Long id) {

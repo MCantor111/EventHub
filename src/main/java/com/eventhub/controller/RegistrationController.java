@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -25,31 +26,47 @@ public class RegistrationController {
     @Operation(summary = "Create a registration")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public RegistrationDTO createRegistration(@Valid @RequestBody CreateRegistrationDTO dto) {
-        return registrationService.createRegistration(dto);
+    public RegistrationDTO createRegistration(
+            @Valid @RequestBody CreateRegistrationDTO dto,
+            Authentication authentication
+    ) {
+        return registrationService.createRegistration(
+                dto,
+                authentication.getName(),
+                hasRole(authentication, "ROLE_ADMIN")
+        );
     }
 
-    @Operation(summary = "Get all registrations")
+    @Operation(summary = "Get accessible registrations")
     @GetMapping
     public List<RegistrationDTO> getAllRegistrations(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
+            Authentication authentication
     ) {
-        if (userId != null) {
-            return registrationService.getRegistrationsByUserId(userId);
-        }
-
-        if (start != null && end != null) {
-            return registrationService.getRegistrationsBetween(start, end);
-        }
-
-        return registrationService.getAllRegistrations();
+        return registrationService.getAccessibleRegistrations(
+                userId,
+                start,
+                end,
+                authentication.getName(),
+                hasRole(authentication, "ROLE_ADMIN")
+        );
     }
 
-    @Operation(summary = "Get registration by id")
+    @Operation(summary = "Get accessible registration by id")
     @GetMapping("/{id}")
-    public RegistrationDTO getRegistrationById(@PathVariable Long id) {
-        return registrationService.getRegistrationById(id);
+    public RegistrationDTO getRegistrationById(@PathVariable Long id, Authentication authentication) {
+        return registrationService.getRegistrationById(
+                id,
+                authentication.getName(),
+                hasRole(authentication, "ROLE_ADMIN")
+        );
+    }
+
+    private boolean hasRole(Authentication authentication, String roleName) {
+        return authentication.getAuthorities()
+                .stream()
+                .anyMatch(authority -> authority.getAuthority().equals(roleName));
     }
 }

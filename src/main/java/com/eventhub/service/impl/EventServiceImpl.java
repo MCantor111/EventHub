@@ -11,6 +11,7 @@ import com.eventhub.model.Event;
 import com.eventhub.repository.CategoryRepository;
 import com.eventhub.repository.EventRepository;
 import com.eventhub.service.EventService;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +34,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @CacheEvict(value = {"events", "eventsList"}, allEntries = true)
     public EventDTO createEvent(CreateEventDTO dto) {
         Category category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new CategoryNotFoundException("Category not found with id " + dto.getCategoryId()));
@@ -47,6 +49,34 @@ public class EventServiceImpl implements EventService {
 
         Event saved = eventRepository.save(event);
         return toDTO(saved);
+    }
+
+    @Override
+    @CacheEvict(value = {"events", "eventsList"}, allEntries = true)
+    public EventDTO updateEvent(Long id, CreateEventDTO dto) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new EventNotFoundException("Event not found with id " + id));
+
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new CategoryNotFoundException("Category not found with id " + dto.getCategoryId()));
+
+        event.setTitle(dto.getTitle());
+        event.setDescription(dto.getDescription());
+        event.setTicketPrice(dto.getTicketPrice());
+        event.setEventDate(dto.getEventDate());
+        event.setActive(dto.getActive() != null ? dto.getActive() : true);
+        event.setCategory(category);
+
+        Event saved = eventRepository.save(event);
+        return toDTO(saved);
+    }
+
+    @Override
+    @CacheEvict(value = {"events", "eventsList"}, allEntries = true)
+    public void deleteEvent(Long id) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new EventNotFoundException("Event not found with id " + id));
+        eventRepository.delete(event);
     }
 
     @Override

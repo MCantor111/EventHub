@@ -20,20 +20,20 @@ public class UserController {
         this.userService = userService;
     }
 
-    @Operation(summary = "Create a user")
+    @Operation(summary = "Create a user (admin only)")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public UserDTO createUser(@Valid @RequestBody CreateUserDTO dto) {
         return userService.createUser(dto);
     }
 
-    @Operation(summary = "Get all users")
+    @Operation(summary = "Get all users (admin only)")
     @GetMapping
     public List<UserDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
-    @Operation(summary = "Get user by id")
+    @Operation(summary = "Get user by id (admin only)")
     @GetMapping("/{id}")
     public UserDTO getUserById(@PathVariable Long id) {
         return userService.getUserById(id);

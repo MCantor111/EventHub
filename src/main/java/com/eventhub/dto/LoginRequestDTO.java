@@ -4,31 +4,18 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.List;
-
-public class CreateUserDTO {
-
-    @NotBlank(message = "User name is required")
-    @Size(min = 2, max = 100, message = "User name must be between 2 and 100 characters")
-    private String name;
+public class LoginRequestDTO {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
-    @Size(max = 150, message = "Email must be at most 150 characters")
+    @Size(max = 150, message = "Email must not exceed 150 characters")
     private String email;
 
     @NotBlank(message = "Password is required")
     @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     private String password;
 
-    // Optional. If omitted, default is ROLE_USER.
-    private List<String> roles;
-
-    public CreateUserDTO() {
-    }
-
-    public String getName() {
-        return name;
+    public LoginRequestDTO() {
     }
 
     public String getEmail() {
@@ -39,23 +26,11 @@ public class CreateUserDTO {
         return password;
     }
 
-    public List<String> getRoles() {
-        return roles;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public void setEmail(String email) {
         this.email = email;
     }
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public void setRoles(List<String> roles) {
-        this.roles = roles;
     }
 }

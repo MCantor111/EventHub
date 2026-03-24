@@ -4,12 +4,14 @@ import com.eventhub.dto.CreateRegistrationDTO;
 import com.eventhub.dto.RegistrationDTO;
 import com.eventhub.dto.RegistrationItemDTO;
 import com.eventhub.dto.UserDTO;
+import com.eventhub.exception.AuthenticationException;
 import com.eventhub.exception.EventNotFoundException;
 import com.eventhub.exception.RegistrationNotFoundException;
 import com.eventhub.exception.UserNotFoundException;
 import com.eventhub.model.Event;
 import com.eventhub.model.Registration;
 import com.eventhub.model.RegistrationItem;
+import com.eventhub.model.Role;
 import com.eventhub.model.User;
 import com.eventhub.repository.EventRepository;
 import com.eventhub.repository.RegistrationRepository;
@@ -38,12 +40,19 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     @Override
-    public RegistrationDTO createRegistration(CreateRegistrationDTO dto) {
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new UserNotFoundException("User not found with id " + dto.getUserId()));
+    public RegistrationDTO createRegistration(CreateRegistrationDTO dto, String currentUserEmail, boolean isAdmin) {
+        User authenticatedUser = userRepository.findByEmailIgnoreCase(currentUserEmail)
+                .orElseThrow(() -> new UserNotFoundException("Authenticated user not found with email " + currentUserEmail));
+
+        Long effectiveUserId = isAdmin && dto.getUserId() != null
+                ? dto.getUserId()
+                : authenticatedUser.getId();
+
+        User targetUser = userRepository.findById(effectiveUserId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + effectiveUserId));
 
         Registration registration = new Registration();
-        registration.setUser(user);
+        registration.setUser(targetUser);
         registration.setStatus(dto.getStatus());
 
         List<RegistrationItem> items = dto.getItems().stream().map(itemDto -> {
@@ -66,31 +75,50 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     @Override
-    public RegistrationDTO getRegistrationById(Long id) {
+    public RegistrationDTO getRegistrationById(Long id, String currentUserEmail, boolean isAdmin) {
         Registration registration = registrationRepository.findDetailedById(id)
                 .orElseThrow(() -> new RegistrationNotFoundException("Registration not found with id " + id));
+
+        if (!isAdmin && !registration.getUser().getEmail().equalsIgnoreCase(currentUserEmail)) {
+            throw new AuthenticationException("You are not allowed to view this registration.");
+        }
+
         return toDTO(registration);
     }
 
     @Override
-    public List<RegistrationDTO> getAllRegistrations() {
-        return registrationRepository.findAll()
-                .stream()
-                .map(this::toDTO)
-                .toList();
-    }
+    public List<RegistrationDTO> getAccessibleRegistrations(
+            Long userId,
+            LocalDateTime start,
+            LocalDateTime end,
+            String currentUserEmail,
+            boolean isAdmin
+    ) {
+        if (isAdmin) {
+            if (userId != null) {
+                return registrationRepository.findByUserId(userId)
+                        .stream()
+                        .map(this::toDTO)
+                        .toList();
+            }
 
-    @Override
-    public List<RegistrationDTO> getRegistrationsByUserId(Long userId) {
-        return registrationRepository.findByUserId(userId)
-                .stream()
-                .map(this::toDTO)
-                .toList();
-    }
+            if (start != null && end != null) {
+                return registrationRepository.findByRegistrationDateBetween(start, end)
+                        .stream()
+                        .map(this::toDTO)
+                        .toList();
+            }
 
-    @Override
-    public List<RegistrationDTO> getRegistrationsBetween(LocalDateTime start, LocalDateTime end) {
-        return registrationRepository.findByRegistrationDateBetween(start, end)
+            return registrationRepository.findAll()
+                    .stream()
+                    .map(this::toDTO)
+                    .toList();
+        }
+
+        User authenticatedUser = userRepository.findByEmailIgnoreCase(currentUserEmail)
+                .orElseThrow(() -> new UserNotFoundException("Authenticated user not found with email " + currentUserEmail));
+
+        return registrationRepository.findByUserId(authenticatedUser.getId())
                 .stream()
                 .map(this::toDTO)
                 .toList();
@@ -103,7 +131,8 @@ public class RegistrationServiceImpl implements RegistrationService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getRoles().stream().map(Role::getName).sorted().toList()
         );
 
         List<RegistrationItemDTO> itemDTOs = registration.getRegistrationItems()

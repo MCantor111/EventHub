@@ -10,6 +10,10 @@ public interface EventService {
 
     EventDTO createEvent(CreateEventDTO dto);
 
+    EventDTO updateEvent(Long id, CreateEventDTO dto);
+
+    void deleteEvent(Long id);
+
     EventDTO getEventById(Long id);
 
     PagedResponse<EventDTO> getAllEvents(

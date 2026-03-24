@@ -1,6 +1,7 @@
 package com.eventhub.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class UserDTO {
 
@@ -8,15 +9,17 @@ public class UserDTO {
     private String name;
     private String email;
     private LocalDateTime createdAt;
+    private List<String> roles;
 
     public UserDTO() {
     }
 
-    public UserDTO(Long id, String name, String email, LocalDateTime createdAt) {
+    public UserDTO(Long id, String name, String email, LocalDateTime createdAt, List<String> roles) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.createdAt = createdAt;
+        this.roles = roles;
     }
 
     public Long getId() {
@@ -35,6 +38,10 @@ public class UserDTO {
         return createdAt;
     }
 
+    public List<String> getRoles() {
+        return roles;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -49,5 +56,9 @@ public class UserDTO {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
     }
 }

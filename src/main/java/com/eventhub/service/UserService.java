@@ -6,6 +6,7 @@ import com.eventhub.dto.UserDTO;
 import java.util.List;
 
 public interface UserService {
+
     UserDTO createUser(CreateUserDTO dto);
 
     UserDTO getUserById(Long id);
