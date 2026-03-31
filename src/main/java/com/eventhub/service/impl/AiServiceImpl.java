@@ -59,30 +59,39 @@ public class AiServiceImpl implements AiService {
 
             return new AiHealthResponse(true, response);
         } catch (Exception ex) {
+            ex.printStackTrace();
             return new AiHealthResponse(false, "AI service is unavailable: " + ex.getMessage());
         }
     }
 
     @Override
     public AiChatResponse chat(AiChatRequest request) {
-        String sanitizedPrompt = promptSanitizer.sanitize(request.getPrompt());
+        try {
+            String sanitizedPrompt = promptSanitizer.sanitize(request.getPrompt());
 
-        String userPrompt = renderTemplate(
-                aiPromptConfig.getGeneralChatUserPromptTemplate(),
-                Map.of("prompt", sanitizedPrompt)
-        );
+            String userPrompt = renderTemplate(
+                    aiPromptConfig.getGeneralChatUserPromptTemplate(),
+                    Map.of("prompt", sanitizedPrompt)
+            );
 
-        String response = chatClient.prompt()
-                .system(aiPromptConfig.getSystemPrompt())
-                .user(userPrompt)
-                .call()
-                .content();
+            String response = chatClient.prompt()
+                    .system(aiPromptConfig.getSystemPrompt())
+                    .user(userPrompt)
+                    .call()
+                    .content();
 
-        if (!aiOutputValidator.isSafeText(response)) {
-            return new AiChatResponse(aiOutputValidator.safeFallbackText());
+            if (!aiOutputValidator.isSafeText(response)) {
+                return new AiChatResponse(aiOutputValidator.safeFallbackText());
+            }
+
+            return new AiChatResponse(response);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
+            return new AiChatResponse(
+                    "AI service is currently unavailable due to quota limits. Please try again later."
+            );
         }
-
-        return new AiChatResponse(response);
     }
 
     @Override

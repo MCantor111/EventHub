@@ -57,7 +57,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/api/auth/**"
+                                "/api/auth/**",
+                                "/api/ai/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/events/*/registration-count").hasRole("ADMIN")
